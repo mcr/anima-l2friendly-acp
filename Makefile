@@ -1,14 +1,12 @@
-DRAFT:=masa-operational-considerations
+DRAFT:=anima-ipv6-lldp
 VERSION:=$(shell ./getver ${DRAFT}.mkd )
 EXAMPLES=
 
 ${DRAFT}-${VERSION}.txt: ${DRAFT}.txt
 	cp ${DRAFT}.txt ${DRAFT}-${VERSION}.txt
-	: git add ${DRAFT}-${VERSION}.txt ${DRAFT}.txt
 
 %.xml: %.mkd 
-	kramdown-rfc2629 ${DRAFT}.mkd | ./insert-figures >${DRAFT}.xml
-	: git add ${DRAFT}.xml
+	kramdown-rfc2629 ${DRAFT}.mkd >${DRAFT}.xml
 
 %.txt: %.xml
 	unset DISPLAY; XML_LIBRARY=$(XML_LIBRARY):./src xml2rfc $? $@
