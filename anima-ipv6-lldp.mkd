@@ -1,7 +1,7 @@
 ---
 title: IPv6 over Link-Local Discovery Protocol
 abbrev: v6-LLDP
-docname: draft-richardson-anima-masa-considerations-00
+docname: draft-richardson-anima-ipv6-lldp-00
 
 # stand_alone: true
 
@@ -32,18 +32,16 @@ normative:
   RFC8138:
 
 informative:
-  RFC7030:
   RFC8368:
 
 --- abstract
 
-This document describes a number of operational modes that a
-BRSKI Manufacturer Authorized Signing Authority (MASA) may take on.
+This document describes an encapsulaton of IPv6 packets using Link-Layer
+Discovery Protocol (LLDP).
 
-Each mode is defined, and then each mode is given a relevance
-within an over applicability of what kind of organization the
-MASA is deployed into.  This document does not change any
-protocol mechanisms.
+LLDP has the desireable property over standard ethernet encapsulation that it
+does not propogate through layer-switching fabric.  This makes creation of
+the autonomic control plane easier.
 
 --- middle
 
@@ -56,12 +54,12 @@ IEEE 802 local area network.
 
 Its Type-Length-Value (TLV) design allows for "vendor-specific" extensions to
 be defined.  IANA has a registered IEEE 802 organizationally unique
-identifier (OUI) defined as documented in {{!RFC7042}}.
+identifier (OUI) defined as documented in {{RFC7042}}.
 
 The creation and maintenance of the Autonomic Control Plane described in
 {{-ACP}} requires creation of hop-by-hop discovery of adjacent systems.
 There are Campus L2 systems that are not broadcast safe until they have been
-connected to their Software Defined Networking (SDN) controller.  
+connected to their Software Defined Networking (SDN) controller.
 The use of the stable connectivity provided by {{RFC8368}} can provide the
 SDN connectivity required.
 
@@ -75,7 +73,7 @@ layer-3 forwarding.
 
 Additional LLDP has the advantage that received LLDP frames are already
 configured in routing fabrics to be send up to the control plane processor,
-with information identifying which physical port it was received on. 
+with information identifying which physical port it was received on.
 This is exactly the desired data flow for the {{-ACP}}: all traffic goes to
 the control processor.
 
