@@ -11,7 +11,6 @@ wg: anima Working Group
 kw: Internet-Draft
 cat: std
 
-coding: us-ascii
 pi:    # can use array (if all yes) or hash here
   toc: yes
   sortrefs:   # defaults to yes
@@ -26,7 +25,7 @@ author:
   email: mcr+ietf@sandelman.ca
 
 normative:
-  BCP14: RFC8174
+  RFC8174: BCP14
   RFC7042:
   I-D.ietf-anima-autonomic-control-plane: ACP
   RFC8138:
@@ -110,7 +109,7 @@ The LLDP vendor-specific frame has the following format:
 
 The vendor-specific frame has a limit of 255 octets, while IPv6 has a minimum
 MTU of 1280 bytes.  An LLDP frame can contain more than one TLV, and ethernet
-accomodates up to 1500 bytes (often larger), so it should all fit.  
+accomodates up to 1500 bytes (often larger), so it should all fit.
 Two possible solutions are discussed here:
 
 1. use six subtype TLV values.  The first for 255 octets go into the first
@@ -121,7 +120,7 @@ Two possible solutions are discussed here:
 
 2. use the same TLV value, repeated six times.
 
-The second method seems more obvious but it is unclear if all LLDP subsystems 
+The second method seems more obvious but it is unclear if all LLDP subsystems
 would permit TLVs to be repeated, or if they would keep the TLVs in the
 correct order.   While the IANA has only 253 available TLVs, and perhaps
 a request for 6 values might seem excessive, if this resource was depleted, a
@@ -154,7 +153,7 @@ Note that in the {{-ACP}} a mesh of IPsec tunnels is created on top of ESP packe
 over IPv6 Link-Local, and within that tunnel all of IPv6 can be sent.
 
 The use hard coding of so many values significantly limits the attack surface
-possible. 
+possible.
 
 ## Content of Payload -- option 3 - RFC8138 compressed packet
 
