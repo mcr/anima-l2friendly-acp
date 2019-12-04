@@ -82,6 +82,10 @@ needed for formation of the {{-ACP}}.  Those packets types include: IPv6
 Neighbor Discovery, GRASP DULL over IPv6 Link-Local, IPsec ESP and IKEv2
 packets.
 
+## Terminology
+
+{::boilerplate bcp14}
+
 # Protocol
 
 ## LLDP Encapsulation
