@@ -1,7 +1,7 @@
 ---
 title: IPv6 over Link-Local Discovery Protocol
 abbrev: v6-LLDP
-docname: draft-richardson-anima-ipv6-lldp-01
+docname: draft-richardson-anima-ipv6-lldp-02
 
 # stand_alone: true
 
@@ -17,7 +17,6 @@ pi:    # can use array (if all yes) or hash here
   symrefs: yes
 
 author:
-
 
 - ins: M. Richardson
   name: Michael Richardson
@@ -35,12 +34,15 @@ informative:
 
 --- abstract
 
-This document describes an encapsulaton of IPv6 packets using Link-Layer
-Discovery Protocol (LLDP).
+This document describes a mechanism to encapsulate IPv6 packets over the
+Link-Local Discovery Protocol (LLDP).  The LLDP is a single layer-two
+protocol and is never forwarded, which is a desireable property when
+building the IPv6-over-IPsec-over-IPv6-Link-Local tunnels that make
+up the ANIMA Autonomic Control Plane (ACP).
 
-LLDP has the desireable property over standard ethernet encapsulation that it
-does not propogate through layer-switching fabric.  This makes creation of
-the autonomic control plane easier.
+This unorthodox encapsulation avoids unwanted interactions between the ACP
+packets and native packet forwarding engines, as well as being safe for
+layer-2 switches which might otherwise have no IPv6 capabilities.
 
 --- middle
 
@@ -66,9 +68,9 @@ There is a bootstrap problem: the network may be unsafe for ACP discovery
 broadcasts until configured, and it can not be autonomically configured until
 the ACP discovery (and onboarding process) is done.
 
-LLDP provides an out, as it is never broadcast, and it discovers all
-compliant layer-2 devices in a network, even if they do not normally do
-layer-3 forwarding.
+LLDP provides an out, as it is never forwarded to other ports, and it
+discovers all compliant layer-2 devices in a network, even if they do not
+normally do layer-3 forwarding.
 
 Additional LLDP has the advantage that received LLDP frames are already
 configured in routing fabrics to be send up to the control plane processor,
@@ -77,9 +79,9 @@ This is exactly the desired data flow for the {{-ACP}}: all traffic goes to
 the control processor.
 
 This document provides a way to transmit the IPv6 Link-Layer packets that are
-needed for formation of the {{-ACP}}.  Those packets types include: IPv6
-Neighbor Discovery, GRASP DULL over IPv6 Link-Local, IPsec ESP and IKEv2
-packets.
+needed for formation of the {{-ACP}}.
+Those packets types include: IPv6 Neighbor Discovery, GRASP DULL over IPv6
+Link-Local, IPsec ESP and IKEv2 packets.
 
 ## Terminology
 
@@ -116,7 +118,8 @@ Two possible solutions are discussed here:
    TLV, the second 255 octets go into the second TLV, etc.  Six options
    of 255 bytes each results in a maximum payload size of 1530, which
    exceeds the ethernet payload size.  Given the overhead of 6 bytes
-   per TLV, plus other overhead, this results in an MTU of 1450 bytes.
+   per TLV, this results in an MTU of 1464 bytes within the 1500 byte
+   ethernet payload space.
 
 2. use the same TLV value, repeated six times.
 
@@ -124,22 +127,26 @@ The second method seems more obvious but it is unclear if all LLDP subsystems
 would permit TLVs to be repeated, or if they would keep the TLVs in the
 correct order.   While the IANA has only 253 available TLVs, and perhaps
 a request for 6 values might seem excessive, if this resource was depleted, a
-new OUI could be used.  Or an OUI specific to this effort could be allocated.
+new OUI could be used.
+
+An OUI specific to this effort could be allocated, or a vendor OUI could be
+used during prototyping.
 
 ## Content of Payload -- option 1 - entire IPv6 packet
 
 The simplest encapsulation would put the entire IPv6 packet, including the
-whole header in.  This takes a bit more space, but provides the maximum
-flexibility.
+IPv6 header in.
+This takes a bit more space, but provides the maximum flexibility.
 
 This flexibility may come at a cost of creating a new attack surface for
-devices. Any L2 connected device may not inject IPv6 frames into the control
-plane of the adjacenty router.
+devices.
+Any L2 connected device may not inject IPv6 frames into the control plane of
+the adjacenty router.
 
 ## Content of Payload -- option 2 - elided IPv6 packet
 
-The {{-ACP}} use case only sends IPv6 Link-Local packets.  The IPv6 source
-and destination address are always directly related to the L2 Ethernet
+The {{-ACP}} use case only sends IPv6 Link-Local packets.
+The IPv6 source and destination address are always directly related to the L2 Ethernet
 headers, with the use of SLAAC derived IIDs, and the prefix "fe80".
 
 This proposal is to include only the fields:
