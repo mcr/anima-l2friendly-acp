@@ -1,7 +1,6 @@
----
 title: IPv6 over Link-Local Discovery Protocol
 abbrev: v6-LLDP
-docname: draft-richardson-anima-ipv6-lldp-02
+docname: draft-richardson-anima-ipv6-lldp-03
 
 # stand_alone: true
 
@@ -22,6 +21,10 @@ author:
   name: Michael Richardson
   org: Sandelman Software Works
   email: mcr+ietf@sandelman.ca
+- ins: L. Xia
+  name: Liang Xia (Frank)
+  org: Huawei
+  email: frank.xialiang@huawei.com
 
 normative:
   RFC8174: BCP14
@@ -49,7 +52,7 @@ layer-2 switches which might otherwise have no IPv6 capabilities.
 # Introduction
 
 The IEEE802.1AB Link Layer Discovery Protocol (LLDP) is a one-hop,
-vendor-neutral link-layer protocol used by end host network Things
+vendor-neutral link-layer protocol used by network devices or Things
 for advertising their identity, capabilities, and neighbors on an
 IEEE 802 local area network.
 
@@ -64,22 +67,23 @@ connected to their Software Defined Networking (SDN) controller.
 The use of the stable connectivity provided by {{RFC8368}} can provide the
 SDN connectivity required.
 
-There is a bootstrap problem: the network may be unsafe for ACP discovery
-broadcasts until configured, and it can not be autonomically configured until
+There is a bootstrap interlocking problem: the network may be unsafe for ACP discovery
+broadcasts without the support of Spanning Tree Protocol (STP) or similar mechanisms
+until configured, yet it can not be automatically configured until
 the ACP discovery (and onboarding process) is done.
 
-LLDP provides an out, as it is never forwarded to other ports, and it
+LLDP provides a way for the above problem, as it is never forwarded to other ports, and it
 discovers all compliant layer-2 devices in a network, even if they do not
 normally do layer-3 forwarding.
 
-Additional LLDP has the advantage that received LLDP frames are already
+Additionally, LLDP has the advantage that received LLDP frames are already
 configured in routing fabrics to be send up to the control plane processor,
-with information identifying which physical port it was received on.
+with information identifying which physical port they were received on.
 This is exactly the desired data flow for the {{-ACP}}: all traffic goes to
-the control processor.
+the control plane processor.
 
 This document provides a way to transmit the IPv6 Link-Layer packets that are
-needed for formation of the {{-ACP}}.
+needed for formation of the {{-ACP}} over the LLDP.
 Those packets types include: IPv6 Neighbor Discovery, GRASP DULL over IPv6
 Link-Local, IPsec ESP and IKEv2 packets.
 
@@ -97,7 +101,7 @@ The LLDP vendor-specific frame has the following format:
    +--------+--------+----------+---------+--------------
    |TLV Type|  len   |   OUI    |subtype  | IPv6 fragment
    |  =127  |        |= 00 00 5E|  = TBD  |
-   |(7 bits)|(9 bits)|(3 octets)|(1 octet)|(1-255 octets)
+   |(7 bits)|(9 bits)|(3 octets)|(1 octet)|(0-507 octets)
    +--------+--------+----------+---------+--------------
 ~~~~
 
@@ -107,26 +111,26 @@ The LLDP vendor-specific frame has the following format:
 *  len = indicates the TLV string length
 *  OUI = 00 00 5E is the organizationally unique identifier of IANA
 *  subtype = TBD (as assigned by IANA for this document)
-*  IPv6 fragment, up to 255 octets of packet.
+*  IPv6 fragment, up to 507 octets of packet.
 
-The vendor-specific frame has a limit of 255 octets, while IPv6 has a minimum
+The vendor-specific frame has a limit of 507 octets, while IPv6 has a minimum
 MTU of 1280 bytes.  An LLDP frame can contain more than one TLV, and ethernet
 accomodates up to 1500 bytes (often larger), so it should all fit.
 Two possible solutions are discussed here:
 
-1. use six subtype TLV values.  The first for 255 octets go into the first
-   TLV, the second 255 octets go into the second TLV, etc.  Six options
-   of 255 bytes each results in a maximum payload size of 1530, which
-   exceeds the ethernet payload size.  Given the overhead of 6 bytes
+1. use three subtype TLV values.  The first 507 octets go into the first
+   TLV, the second 507 octets go into the second TLV, etc.  three TLVs
+   of 507 octets payload each results in a maximum payload size of 1521, which
+   exceeds the ethernet payload size of 1500 bytes.  Given the overhead of 6 bytes
    per TLV, this results in an MTU of 1464 bytes within the 1500 byte
    ethernet payload space.
 
-2. use the same TLV value, repeated six times.
+2. use the same subtype TLV value, repeated three times.
 
 The second method seems more obvious but it is unclear if all LLDP subsystems
 would permit TLVs to be repeated, or if they would keep the TLVs in the
 correct order.   While the IANA has only 253 available TLVs, and perhaps
-a request for 6 values might seem excessive, if this resource was depleted, a
+a request for three values might seem excessive, if this resource was depleted, a
 new OUI could be used.
 
 An OUI specific to this effort could be allocated, or a vendor OUI could be
@@ -141,7 +145,7 @@ This takes a bit more space, but provides the maximum flexibility.
 This flexibility may come at a cost of creating a new attack surface for
 devices.
 Any L2 connected device may not inject IPv6 frames into the control plane of
-the adjacenty router.
+the adjacent devices.
 
 ## Content of Payload -- option 2 - elided IPv6 packet
 
@@ -150,6 +154,7 @@ The IPv6 source and destination address are always directly related to the L2 Et
 headers, with the use of SLAAC derived IIDs, and the prefix "fe80".
 
 This proposal is to include only the fields:
+
 1. Payload Length
 2. Next Header
 
@@ -157,9 +162,9 @@ The Hop Limit is always 1 for Link-Local packets.
 The Flow Label is always 0.
 
 Note that in the {{-ACP}} a mesh of IPsec tunnels is created on top of ESP packets
-over IPv6 Link-Local, and within that tunnel all of IPv6 can be sent.
+over IPv6 Link-Local, and within that tunnel all of IPv6 packets can be sent.
 
-The use hard coding of so many values significantly limits the attack surface
+The use of hard coding of so many values significantly limits the attack surface
 possible.
 
 ## Content of Payload -- option 3 - RFC8138 compressed packet
@@ -169,11 +174,11 @@ An option similar to above, yet providing a bit more flexibility is to use
 networks.
 
 This results in compression that is close to what option 2 provides, yet
-provides for a lot of flexibility.
+providing a lot of flexibility.
 
 This option requires more code, may be subject to new attacks on the
 decompression code, and expands the attack surface to all of IPv6, as well as
-the RFC8138 compression code.
+the {{RFC8138}} compression code.
 
 # Privacy Considerations
 
@@ -181,7 +186,14 @@ YYY
 
 # Security Considerations
 
-ZZZ
+LLDP is relatively simple and does not provide any protections to the traffic over it. 
+The IPv6 packets over the LLDP SHOULD be protected by all the existing best current 
+practices.
+
+The device control plane processor will be subject to the Deny of Service (DoS) attack
+if excessive IPv6 packets over LLDP frames are send up. Certain protecting mechanisms
+like rate limit and filtering can be considered.  
+
 
 # IANA Considerations
 
