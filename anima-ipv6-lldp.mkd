@@ -1,4 +1,4 @@
-----
+---
 title: IPv6 over Link-Local Discovery Protocol
 abbrev: v6-LLDP
 docname: draft-richardson-anima-ipv6-lldp-03
