@@ -38,8 +38,8 @@ informative:
 --- abstract
 
 This document describes a mechanism to encapsulate IPv6 packets over the
-Link-Local Discovery Protocol (LLDP).  The LLDP is a single layer-two
-protocol and is never forwarded, which is a desireable property when
+Link Layer Discovery Protocol (LLDP).  The LLDP is a single layer-two
+protocol with its own ethertype. It is never forwarded, which is a desireable property when
 building the IPv6-over-IPsec-over-IPv6-Link-Local tunnels that make
 up the ANIMA Autonomic Control Plane (ACP).
 
@@ -55,6 +55,10 @@ The IEEE802.1AB Link Layer Discovery Protocol (LLDP) is a one-hop,
 vendor-neutral link-layer protocol used by network devices or Things
 for advertising their identity, capabilities, and neighbors on an
 IEEE 802 local area network.
+
+The LLDP uses its own ethertype (0x88cc), and so is distinct from production
+IPv4 or IPv6 traffic that might appear on a network.
+Switching equipment is usually configured such that it does not forward LLDP packets.
 
 Its Type-Length-Value (TLV) design allows for "vendor-specific" extensions to
 be defined.  IANA has a registered IEEE 802 organizationally unique
@@ -186,13 +190,13 @@ YYY
 
 # Security Considerations
 
-LLDP is relatively simple and does not provide any protections to the traffic over it. 
-The IPv6 packets over the LLDP SHOULD be protected by all the existing best current 
+LLDP is relatively simple and does not provide any protections to the traffic over it.
+The IPv6 packets over the LLDP SHOULD be protected by all the existing best current
 practices.
 
 The device control plane processor will be subject to the Deny of Service (DoS) attack
 if excessive IPv6 packets over LLDP frames are send up. Certain protecting mechanisms
-like rate limit and filtering can be considered.  
+like rate limit and filtering can be considered.
 
 
 # IANA Considerations
