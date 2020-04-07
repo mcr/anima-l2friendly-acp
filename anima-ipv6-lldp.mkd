@@ -1,7 +1,7 @@
----
+----
 title: IPv6 over Link-Local Discovery Protocol
 abbrev: v6-LLDP
-docname: draft-richardson-anima-ipv6-lldp-03
+docname: draft-richardson-anima-ipv6-lldp-04
 
 # stand_alone: true
 
@@ -96,6 +96,9 @@ Link-Local, IPsec ESP and IKEv2 packets.
 
 {::boilerplate bcp14}
 
+The term "octet" is used as a synonym for byte. As the IEEE prefers the term
+octet, it is used whenever speaking of LLDP specific things.
+
 # Protocol
 
 ## LLDP Encapsulation
@@ -116,30 +119,31 @@ The LLDP vendor-specific frame has the following format:
 *  len = indicates the TLV string length
 *  OUI = 00 00 5E is the organizationally unique identifier of IANA
 *  subtype = TBD (as assigned by IANA for this document)
-*  IPv6 fragment, up to 507 octets of packet.
+*  IPv6 fragment, up to 508 octets of packet.
 
-The vendor-specific frame has a limit of 507 octets, while IPv6 has a minimum
+The vendor-specific frame has a limit of 508 octets, while IPv6 has a minimum
 MTU of 1280 bytes.  An LLDP frame can contain more than one TLV, and ethernet
 accomodates up to 1500 bytes (often larger), so it should all fit.
 Two possible solutions are discussed here:
 
-1. use three subtype TLV values.  The first 507 octets go into the first
-   TLV, the second 507 octets go into the second TLV, etc.  three TLVs
-   of 507 octets payload each results in a maximum payload size of 1521, which
-   exceeds the ethernet payload size of 1500 bytes.  Given the overhead of 6 bytes
-   per TLV, this results in an MTU of 1464 bytes within the 1500 byte
-   ethernet payload space.
+1. use three subtype TLV values.  The first 508 octets go into the first
+   TLV, the second 508 octets go into the second TLV, etc.  three TLVs
+   of 508 octets payload each results in a maximum payload size of 1524, which
+   exceeds the IPv6 minimum MTU of 1280 bytes.
+   Given the overhead of 6 octets
+   per TLV, the result is that a maximum IPv6 MTU of 1464 bytes will fit
+   within a standard 1500 octet ethernet payload space.
 
 2. use the same subtype TLV value, repeated three times.
 
 The second method seems more obvious but it is unclear if all LLDP subsystems
 would permit TLVs to be repeated, or if they would keep the TLVs in the
 correct order.   While the IANA has only 253 available TLVs, and perhaps
-a request for three values might seem excessive, if this resource was depleted, a
-new OUI could be used.
+a request for three values might seem excessive, if this resource was
+depleted, a new OUI could be used.
 
-An OUI specific to this effort could be allocated, or a vendor OUI could be
-used during prototyping.
+Alternatively, an OUI specific to this effort could be allocated.
+A vendor OUI could be used during prototyping.
 
 ## Content of Payload -- option 1 - entire IPv6 packet
 
