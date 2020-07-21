@@ -22,10 +22,10 @@ author:
   name: Michael Richardson
   org: Sandelman Software Works
   email: mcr+ietf@sandelman.ca
-- ins: L. Xia
-  name: Liang Xia (Frank)
-  org: Huawei
-  email: frank.xialiang@huawei.com
+- ins: Jie Yang
+  name: Jie Yang
+  org: Huawei Technologies Co., Ltd.
+  email: jay.yang@huawei.com
 
 normative:
   RFC8174: BCP14
@@ -75,9 +75,12 @@ SDN connectivity required.
 There is a bootstrap interlocking problem: the network may be unsafe for ACP discovery
 broadcasts without the support of Spanning Tree Protocol (STP) or similar mechanisms
 until configured, yet it can not be automatically configured until
-the ACP discovery (and onboarding process) is done.
+the ACP discovery (and onboarding process) is done. Meantime, because of STP complicated topo
+caculation, so its convergence is very slow, for larger network, especially during on-boarding,
+STP is not a good solution. Additionally, STP may miss some devices, or may discover untrusted
+devices in the same domain, it will make terrible problems.
 
-LLDP provides a way for the above problem, as it is never forwarded to other ports, and it
+LLDP as a L2-based hop-to-hop devices discovery protocol, can provides a way for the above problem, as it is never forwarded to other ports, and it
 discovers all compliant layer-2 devices in a network, even if they do not
 normally do layer-3 forwarding.
 
