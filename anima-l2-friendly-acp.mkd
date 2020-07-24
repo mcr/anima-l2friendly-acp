@@ -29,9 +29,7 @@ author:
 
 normative:
   RFC8174: BCP14
-  RFC7042:
   I-D.ietf-anima-autonomic-control-plane: ACP
-  RFC8138:
 
 informative:
   RFC8368:
