@@ -294,16 +294,6 @@ Internet-Draft               l2-friendly-acp                   July 2020
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-   [RFC7042]  Eastlake 3rd, D. and J. Abley, "IANA Considerations and
-              IETF Protocol and Documentation Usage for IEEE 802
-              Parameters", BCP 141, RFC 7042, DOI 10.17487/RFC7042,
-              October 2013, <https://www.rfc-editor.org/info/rfc7042>.
-
-   [RFC8138]  Thubert, P., Ed., Bormann, C., Toutain, L., and R. Cragie,
-              "IPv6 over Low-Power Wireless Personal Area Network
-              (6LoWPAN) Routing Header", RFC 8138, DOI 10.17487/RFC8138,
-              April 2017, <https://www.rfc-editor.org/info/rfc8138>.
-
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
@@ -328,6 +318,16 @@ Authors' Addresses
    Huawei Technologies Co., Ltd.
 
    Email: jay.yang@huawei.com
+
+
+
+
+
+
+
+
+
+
 
 
 
