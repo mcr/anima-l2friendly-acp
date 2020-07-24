@@ -1,0 +1,19 @@
+86                                      # array(6)
+   09                                   # unsigned(9)
+   19 04d2                              # unsigned(1234)
+   50                                   # bytes(16)
+      fe80000000000000100000fffe112233  # "\xFE\x80\x00\x00\x00\x00\x00\x00\x10\x00\x00\xFF\xFE\x11\"3"
+   1a 00033450                          # unsigned(210000)
+   84                                   # array(4)
+      66                                # text(6)
+         414e5f414350                   # "AN_ACP"
+      04                                # unsigned(4)
+      01                                # unsigned(1)
+      65                                # text(5)
+         494b457632                     # "IKEv2"
+   84                                   # array(4)
+      18 67                             # unsigned(103)
+      50                                # bytes(16)
+         fe80000000000000100000fffe112233 # "\xFE\x80\x00\x00\x00\x00\x00\x00\x10\x00\x00\xFF\xFE\x11\"3"
+      11                                # unsigned(17)
+      19 01f4                           # unsigned(500)
