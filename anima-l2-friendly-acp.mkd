@@ -1,7 +1,7 @@
 ---
-title: IPv6 over Link-Local Discovery Protocol
-abbrev: v6-LLDP
-docname: draft-richardson-anima-ipv6-lldp-04
+title: Autonomic Control Plane challenges for Layer-Two Switched Networks
+abbrev: l2-friendly-acp
+docname: draft-richardson-anima-l2-friendly-acp-00
 
 # stand_alone: true
 
@@ -38,32 +38,14 @@ informative:
 
 --- abstract
 
-This document describes a mechanism to encapsulate IPv6 packets over the
-Link Layer Discovery Protocol (LLDP).  The LLDP is a single layer-two
-protocol with its own ethertype. It is never forwarded, which is a desireable property when
-building the IPv6-over-IPsec-over-IPv6-Link-Local tunnels that make
-up the ANIMA Autonomic Control Plane (ACP).
+This document details the challenges with building an Autonomic Control Plane on
+Campus/Enterprise networks which are built out of layer-two (Ethernet) switched technologies.
 
-This unorthodox encapsulation avoids unwanted interactions between the ACP
-packets and native packet forwarding engines, as well as being safe for
-layer-2 switches which might otherwise have no IPv6 capabilities.
+This document does not propose a specific solution as yet, but details a number of possibilities, and what it would take to standardize each possibility.
 
 --- middle
 
 # Introduction
-
-The IEEE802.1AB Link Layer Discovery Protocol (LLDP) is a one-hop,
-vendor-neutral link-layer protocol used by network devices or Things
-for advertising their identity, capabilities, and neighbors on an
-IEEE 802 local area network.
-
-The LLDP uses its own ethertype (0x88cc), and so is distinct from production
-IPv4 or IPv6 traffic that might appear on a network.
-Switching equipment is usually configured such that it does not forward LLDP packets.
-
-Its Type-Length-Value (TLV) design allows for "vendor-specific" extensions to
-be defined.  IANA has a registered IEEE 802 organizationally unique
-identifier (OUI) defined as documented in {{RFC7042}}.
 
 The creation and maintenance of the Autonomic Control Plane described in
 {{-ACP}} requires creation of hop-by-hop discovery of adjacent systems.
@@ -75,122 +57,80 @@ SDN connectivity required.
 There is a bootstrap interlocking problem: the network may be unsafe for ACP discovery
 broadcasts without the support of Spanning Tree Protocol (STP) or similar mechanisms
 until configured, yet it can not be automatically configured until
-the ACP discovery (and onboarding process) is done. Meantime, because of STP complicated topo
-caculation, so its convergence is very slow, for larger network, especially during on-boarding,
-STP is not a good solution. Additionally, STP may miss some devices, or may discover untrusted
-devices in the same domain, it will make terrible problems.
+the ACP discovery (and onboarding process) is done. Meantime, because of STP complicated topological
+calculations, the convergence can be very slow for larger networks.
+This can delay on-boarding.
 
-LLDP as a L2-based hop-to-hop devices discovery protocol, can provides a way for the above problem, as it is never forwarded to other ports, and it
-discovers all compliant layer-2 devices in a network, even if they do not
-normally do layer-3 forwarding.
+In addition, forming a campus-wide network by default and using enabling STP does not work.
+STP is not secure and could be easily spoofed by malicious or untrusted devices.
+On manually configured networks today, STP is turned off on "access" ports, and enabled only for trunk ports.  But in an autonomic network, it is not possible to know a-priori which ports will be trunk ports.
 
-Additionally, LLDP has the advantage that received LLDP frames are already
-configured in routing fabrics to be send up to the control plane processor,
-with information identifying which physical port they were received on.
-This is exactly the desired data flow for the {{-ACP}}: all traffic goes to
-the control plane processor.
+What is needed is a way to send IPv6 traffic between these L2 switching devices in a way that is never  forwarded, regardless of how the network is eventually configured.
+This is not just an inital configuration problem: devices may be added and removed at any time, due to needed expansion of capacity, planned upgrades, or devices failures.
 
-This document provides a way to transmit the IPv6 Link-Layer packets that are
-needed for formation of the {{-ACP}} over the LLDP.
-Those packets types include: IPv6 Neighbor Discovery, GRASP DULL over IPv6
-Link-Local, IPsec ESP and IKEv2 packets.
+A previous version of this document had proposed to do this with LLDP, but this was an inappropriate use of LLDP.
+An analysis of switching fabric options revealed that there were also no particularly advantage to this "hack", as it did not save any fabric resources.
+
+What is desired is another encapsulation that has the same forwarding properties as LLDP.
+
+It is noted that EAPoL (Ethernet Type 0x888e) also has the desired properties.
+
+The ISIS routing protocol also uses a specific EtherType, and some implementations have the desired property of never forwarding.
 
 ## Terminology
 
 {::boilerplate bcp14}
 
-The term "octet" is used as a synonym for byte. As the IEEE prefers the term
-octet, it is used whenever speaking of LLDP specific things.
+# Functional Requirements
 
-# Protocol
+1. The encapsulation should be capable of transferring full-size (1280 byte) IPv6 packets.
 
-## LLDP Encapsulation
+2. The encapsulation should not be confused with standard unicase IPv6 Ethernet encapsulation using EtherType 0x86DD.
 
-The LLDP vendor-specific frame has the following format:
+3. Even when in a very primitive "default" or power-on configuration, a switching fabric should never forward frames received on one port to any other port.
 
-~~~~
-   +--------+--------+----------+---------+--------------
-   |TLV Type|  len   |   OUI    |subtype  | IPv6 fragment
-   |  =127  |        |= 00 00 5E|  = TBD  |
-   |(7 bits)|(9 bits)|(3 octets)|(1 octet)|(0-507 octets)
-   +--------+--------+----------+---------+--------------
-~~~~
+4. It should be possible to send these frames from the forwarding engine to some control plane system for specific processing.  When doing so, the physical port number needs to be associated with the frame.
 
-   where:
+5. It should be possible for control plane daemons to send frames for transmission on any port, and to that port only, even if that port is part of a larger layer-2 domain.
 
-*  TLV Type = 127 indicates a vendor-specific TLV
-*  len = indicates the TLV string length
-*  OUI = 00 00 5E is the organizationally unique identifier of IANA
-*  subtype = TBD (as assigned by IANA for this document)
-*  IPv6 fragment, up to 508 octets of packet.
+# Nice to have Functionality
 
-The vendor-specific frame has a limit of 508 octets, while IPv6 has a minimum
-MTU of 1280 bytes.  An LLDP frame can contain more than one TLV, and ethernet
-accomodates up to 1500 bytes (often larger), so it should all fit.
-Two possible solutions are discussed here:
+1. As the ACP uses IPsec over IPv6-Link-Layer packets, if a switching fabric has accelerated hardware for IPsec ESP, then it would be desireable if the encapsulation format did not get in the way of doing that.
 
-1. use three subtype TLV values.  The first 508 octets go into the first
-   TLV, the second 508 octets go into the second TLV, etc.  three TLVs
-   of 508 octets payload each results in a maximum payload size of 1524, which
-   exceeds the IPv6 minimum MTU of 1280 bytes.
-   Given the overhead of 6 octets
-   per TLV, the result is that a maximum IPv6 MTU of 1464 bytes will fit
-   within a standard 1500 octet ethernet payload space.
+2. As the ACP forms a private layer-3 Virtual Routing Fabric (VRF) on top of the tunnels, if the switching fabric has accelerated support for this, then it would also be useful to be able to use it.
 
-2. use the same subtype TLV value, repeated three times.
+It is likely that many L2 switching fabrics may not support IPsec ESP, or L3 routing.
+It was always the case that the ACP might have to be implemented as a software fabric in a control plane CPU. This is not a significant hurdle, as the ACP is not intended to be used for customer data, only control plane communication, and often only as a last resort.
 
-The second method seems more obvious but it is unclear if all LLDP subsystems
-would permit TLVs to be repeated, or if they would keep the TLVs in the
-correct order.   While the IANA has only 253 available TLVs, and perhaps
-a request for three values might seem excessive, if this resource was
-depleted, a new OUI could be used.
+# Possibilities
 
-Alternatively, an OUI specific to this effort could be allocated.
-A vendor OUI could be used during prototyping.
+There are two things which distinguish LLDP, EAPoL and ISIS traffic from regular traffic.
 
-## Content of Payload -- option 1 - entire IPv6 packet
+The most obivous is the EtherType.
 
-The simplest encapsulation would put the entire IPv6 packet, including the
-IPv6 header in.
-This takes a bit more space, but provides the maximum flexibility.
+LLDP traffic also uses a destination multicast address (01:80:c2:00:00:0e, or 01:80:c2:00:00:03, or 01:80:c2:00:00:00).
+The use of this destination address facilitiates transmission of the traffic through unmanaged switches ("dumb ethernet switches"), as well as allowing for seperation of provider and customer traffic in provider bridged (IEEE 802.1ad) situations.
 
-This flexibility may come at a cost of creating a new attack surface for
-devices.
-Any L2 connected device may not inject IPv6 frames into the control plane of
-the adjacent devices.
+## Just use special destination
 
-## Content of Payload -- option 2 - elided IPv6 packet
+There does not appear to be any legitimate use of Ethertype 0x86DD (normal IPv6) with the special multicast destinations listed above.
+When IPv6 multicast is used, it is mapped to a destination multicast address that starts with 0x3333.
 
-The {{-ACP}} use case only sends IPv6 Link-Local packets.
-The IPv6 source and destination address are always directly related to the L2 Ethernet
-headers, with the use of SLAAC derived IIDs, and the prefix "fe80".
+It would therefore be possible to use the normal encapsulation, but a special destination address.
+This would probably occupy a single entry in a multicast destination table for the switch.
+On some devices, it may require an entry per physical port. (More data is sought)
 
-This proposal is to include only the fields:
+## Use another EtherType
 
-1. Payload Length
-2. Next Header
+Another Ethertype could be registered.  It would behave exactly like 0x86DD, but would be treated differently.
+As neither layer-2 nor layer-3 forwarding is desired for this ethertype, it may not be necessary to modify any forwarding engines.
+To remind: ACP traffic that does need to be forwarded would first be decapsulated from the IPsec ESP.
+At which point the packet would be an IPv6 packet, and it would need to be encapsulated again before forwarded.
+So it would be the ESP engine that might need changes.
 
-The Hop Limit is always 1 for Link-Local packets.
-The Flow Label is always 0.
+## Do something with EAPoL
 
-Note that in the {{-ACP}} a mesh of IPsec tunnels is created on top of ESP packets
-over IPv6 Link-Local, and within that tunnel all of IPv6 packets can be sent.
-
-The use of hard coding of so many values significantly limits the attack surface
-possible.
-
-## Content of Payload -- option 3 - RFC8138 compressed packet
-
-An option similar to above, yet providing a bit more flexibility is to use
-{{RFC8138}} compression of packets as it done on low powered 802.15.4
-networks.
-
-This results in compression that is close to what option 2 provides, yet
-providing a lot of flexibility.
-
-This option requires more code, may be subject to new attacks on the
-decompression code, and expands the attack surface to all of IPv6, as well as
-the {{RFC8138}} compression code.
+It maybe that the hack which was undesireable for LLDP may be well accepted when done for EAPoL.
 
 # Privacy Considerations
 
@@ -198,23 +138,20 @@ YYY
 
 # Security Considerations
 
-LLDP is relatively simple and does not provide any protections to the traffic over it.
-The IPv6 packets over the LLDP SHOULD be protected by all the existing best current
-practices.
-
-The device control plane processor will be subject to the Deny of Service (DoS) attack
-if excessive IPv6 packets over LLDP frames are send up. Certain protecting mechanisms
-like rate limit and filtering can be considered.
+Unclear as yet.
 
 
 # IANA Considerations
 
+None yet.
+
 # Acknowledgements
 
-Hello.
+Paul Congdon was very helpful in understanding how LLDP was actually processed in production equipment.
 
 # Changelog
 
+Document renamed, focus changed.
 
 --- back
 

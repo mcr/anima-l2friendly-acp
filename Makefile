@@ -1,4 +1,4 @@
-DRAFT:=anima-ipv6-lldp
+DRAFT:=anima-l2-friendly-acp
 VERSION:=$(shell ./getver ${DRAFT}.mkd )
 EXAMPLES=
 
