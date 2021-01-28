@@ -22,11 +22,13 @@ author:
   name: Michael Richardson
   org: Sandelman Software Works
   email: mcr+ietf@sandelman.ca
-
 - ins: W. Pan
   name: Wei Pan
   org: Huawei Technologies
   email: william.panwei@huawei.com
+
+contributor:
+- email: jay.yang@huawei.com
 
 normative:
   RFC8174: BCP14
@@ -64,7 +66,7 @@ This can delay on-boarding.
 In addition, forming a campus-wide network by default and using enabling STP does not work.
 STP is not secure and could be easily spoofed by malicious or untrusted devices.
 On manually configured networks today, STP is turned off on "access" ports, and enabled only for trunk ports.
-But in an autonomic network, it is not possible to know a-priori which ports will be trunk ports.
+But in an autonomic network, it is not possible to know a-priori which ports will be trunk ports, so STP would have to be on by default if it is was to be used.
 
 What is needed is a way to send IPv6 traffic between these L2 switching devices in a way that is never forwarded, regardless of how the network is eventually configured.
 This is not just an inital configuration problem: devices may be added and removed at any time, due to needed expansion of capacity, planned upgrades, or devices failures.
@@ -91,21 +93,26 @@ The node SHOULD unicast a Neighbor Advertisement to the corresponding node to es
 
 At this point it is possible to initiate the right key management daemon (IKEv2, etc.) using unicast IPv6 datagrams that only need unicast Ethernet packets.
 
-# Onbording process
+It is likely that many L2 switching fabrics may not support IPsec ESP, or L3 routing.
+It was always the case that the ACP might have to be implemented as a software fabric in a control plane CPU.
+This is not a significant hurdle, as the ACP is not intended to be used for customer data, only control plane communication, and often only as a last resort.
 
-In addition to normal operation, devices need to be onboarding.
+In addition to normal operation, devices may need to be onboarded.
 {{-BRSKI}} section 4.1.1 defines the AN_PROXY message to be used for a new pledge to discover which neighbors are willing to act as onboarding proxies.
 
 This M\_FLOOD message will fit into the same GRASP DULL M\_FLOOD message that contains the AN\_ACP message.
 
 After discover of an eligible neighbour, onboarding proceeds with a TCP connection over IPv6 link-local addresses, using unicast Ethernet frames.
 
-A pledge that is in an L2 network that is broadcast unsafe MUST NOT do mDNS queries as described in {{-BRSKI}} appendix B.
+LLDP traffic also uses a destination multicast address: 01:80:c2:00:00:0e, 01:80:c2:00:00:03, or 01:80:c2:00:00:00.
+The use of this destination address facilitiates transmission of the traffic through unmanaged switches ("dumb ethernet switches"), as well as allowing for seperation of provider and customer traffic in provider bridged (IEEE 802.1ad) situations.
 
 # Other constraints
 
 On broadcast unsafe L2 networks, IPv6 Duplicate Address Detection (DAD) MUST be turned off.
 Only auto-configured IPv6 link-local addresses using SLAAC or stable-IID {{?RFC7217}} may be used.
+
+A pledge that is in an L2 network that is broadcast unsafe MUST NOT do mDNS queries as described in {{-BRSKI}} appendix B.
 
 # Privacy Considerations
 
