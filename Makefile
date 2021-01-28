@@ -4,9 +4,10 @@ EXAMPLES=
 
 ${DRAFT}-${VERSION}.txt: ${DRAFT}.txt
 	cp ${DRAFT}.txt ${DRAFT}-${VERSION}.txt
+	: git add ${DRAFT}-${VERSION}.txt ${DRAFT}.txt
 
 %.xml: %.mkd
-	kramdown-rfc2629 ${DRAFT}.mkd >${DRAFT}.xml
+	kramdown-rfc2629 -3 ${DRAFT}.mkd >${DRAFT}.xml
 	unset DISPLAY; XML_LIBRARY=$(XML_LIBRARY):./src xml2rfc --v2v3 ${DRAFT}.xml
 	mv ${DRAFT}.v2v3.xml ${DRAFT}.xml
 
