@@ -10,7 +10,7 @@ Expires: 17 December 2021                            Huawei Technologies
 
 
      Autonomic Control Plane design for Layer-Two Switched Networks
-               draft-richardson-anima-l2-friendly-acp-01
+               draft-richardson-anima-l2-friendly-acp-02
 
 Abstract
 
