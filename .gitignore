@@ -7,3 +7,5 @@ ietf-cwt-voucher-request@*.yang
 ietf-cwt-voucher@*.yang
 yang
 presentations/ietf-107-anima-ipv6-lldp-expanded.odp
+anima-l2-friendly-acp.xml
+anima-l2-friendly-acp*.txt
