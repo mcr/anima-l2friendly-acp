@@ -1,4 +1,6 @@
 ---
+v: 3
+
 title: Autonomic Control Plane design for Layer-Two Switched Networks
 abbrev: l2-friendly-acp
 docname: draft-richardson-anima-l2-friendly-acp-02
@@ -27,16 +29,13 @@ author:
   org: Huawei Technologies
   email: william.panwei@huawei.com
 
-contributor:
-- email: jay.yang@huawei.com
-
 normative:
-  RFC8174: BCP14
   RFC8994: ACP
   RFC8995: BRSKI
 
 informative:
   RFC8368:
+
 
 --- abstract
 
